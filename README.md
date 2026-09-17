@@ -69,21 +69,24 @@ Ba điều đã đo trên máy thật, không phải suy luận:
 
 ⚠️ `setprop` **không sống qua reboot**, và app phải **khởi động lại** sau khi set (property đọc lúc process start). Tool tự làm cả hai việc này mỗi lần Ghi.
 
-## Vì sao không chia phiên theo từng bước
+## Mốc do tool chèn, không do người bấm
 
-Bản đầu có panel đánh dấu: tester bấm nút của bước sắp làm, tool chèn một dòng
-mốc `USV_MARK` vào chính logcat rồi cắt phiên thành các cửa sổ theo mốc đó.
+Bản web đầu tiên có panel đánh dấu: **tester** bấm nút của bước sắp làm, tool chèn một
+dòng `USV_MARK` vào logcat rồi cắt phiên thành cửa sổ theo mốc đó. Đã bỏ, vì mốc do
+người bấm còn event do app bắn — hai cái không đồng bộ được. Đo trên máy thật: app bật
+màn daily checkin ngay khi mở, event `daily_checkin_screen_view` bắn lúc `16:54:10`
+trong khi mốc đầu tiên bấm được là `16:54:15` — event rơi ra ngoài mọi cửa sổ và bị báo
+`Thiếu`. Cùng app cùng log: không bấm mốc thì `2 pass`, bấm mốc thì `1 pass 1 fail`.
+Một verdict đổi theo thứ tự bấm nút thì không dùng được.
 
-Đã bỏ. Mốc do **tester** bấm còn event do **app** bắn, hai cái không đồng bộ
-được. Đo trên máy thật: app bật màn daily checkin ngay khi mở, event
-`daily_checkin_screen_view` bắn lúc `16:54:10` trong khi mốc đầu tiên bấm được
-là `16:54:15` — event rơi ra ngoài mọi cửa sổ và bị báo `Thiếu`. Cùng app cùng
-log, không bấm mốc thì `2 pass`, bấm mốc thì `1 pass 1 fail`. Một verdict đổi
-theo thứ tự bấm nút thì không dùng được.
+Đường CLI chèn mốc lại, nhưng **tool chèn** ngay trước khi nó tự lái các bước của một
+case — không còn độ trễ tay người, nên cửa sổ khớp với việc thật sự đang làm. Mỗi case
+một cửa sổ, và cửa sổ của case lái hụt bị **bỏ hẳn** trước khi chấm: có mốc mà chưa lái
+tới nơi thì dữ liệu trong đó không nói lên điều gì về app.
 
-Nên giờ tool chấm trên **cả phiên ghi**: mất khả năng kết luận "bắn đúng lúc",
-đổi lại không còn fail oan. Cơ chế mốc vẫn còn ở tầng API (`POST /event/mark`)
-cho kịch bản tự động, chỉ là giao diện không dùng.
+Không có file flow thì không có mốc nào → mọi event ra `NOT_TESTED`, không phải `FAIL`.
+Đường ghi logcat thủ công (tự thao tác tay rồi chấm cả phiên) **đã bỏ cùng web UI**:
+màn nào chưa ghi được flow thì hiện chưa check được.
 
 ## Bảng spec
 
@@ -180,7 +183,7 @@ Republish cùng file giữ nguyên URL — link gửi team chỉ cần nhớ m�
 
 ## Gọi từ Python
 
-Không cần giao diện thì dùng trực tiếp:
+Cần ghép vào script khác thì gọi thẳng, không qua CLI:
 
 ```python
 from usv import event_check_runner, report_event_html
@@ -221,39 +224,6 @@ Ba việc test bắt được mà `curl` không bắt được, nên đừng b�
 |---|---|
 | `test_skill_md_lenh_co_that.py` | lệnh nêu trong SKILL.md/README lệch với parser thật |
 | `test_readme_vi_du_chay_duoc.py` | đoạn code trong README này lệch API |
-
-## Soi nguyên nhân lỗi bằng agent (tuỳ chọn)
-
-Tool chỉ nói được *"spec đòi X, app gửi Y"*. Câu hỏi kế tiếp — app thiếu thật,
-app đổi tên event, spec cũ rồi, hay đơn giản là phiên test chưa đi tới màn đó —
-phải đọc thêm trang spec và log thô mới trả lời được.
-
-Việc đó do **agent** làm, chạy bên ngoài tool. Tool chỉ nhận kết quả và hiển thị:
-
-```
-POST /event/triage   ← agent gửi ghi chú vào (phải khớp generated_at của lượt)
-GET  /event/run      ← kết quả lượt chấm, dạng JSON, CHỈ ĐỌC
-GET  /event/observed ← event app THẬT SỰ bắn: bảng tên + số lần + giờ
-```
-
-Ghi chú hiện thành khối riêng dưới mỗi dòng lỗi, kèm số phiếu phản biện
-(`2/3 agent đồng ý`). **Không có agent thì report y như cũ** — tool không cần
-API key, không thêm thư viện.
-
-Năm kết luận, đúng năm: `app_thieu`, `app_doi_ten`, `spec_cu`,
-`chua_thao_tac`, `khong_do_duoc`.
-
-Ba chốt chặn, vì đây là **suy luận** chứ không phải đo được:
-
-| Chốt | Chặn điều gì |
-|---|---|
-| Chỉ gắn được vào dòng **đang FAIL** (chặn ở cả tầng nhận lẫn tầng vẽ) | Ghi chú trên dòng PASS làm người đọc tưởng dòng đó cũng lỗi |
-| Phải khớp `generated_at` | Ghi chú lượt cũ dán vào lượt mới — sai im lặng |
-| `bo_sot` luôn in ra | Soi 3/15 lỗi mà im thì report trông như đã soi hết |
-
-Chạy bằng Claude Code: `.claude/workflows/triage-event-fail.js` — fan-out một
-agent mỗi dòng lỗi, mỗi kết luận có 2 agent độc lập thử bác bỏ, quá bán mới
-được ghi.
 
 ## Cấu hình
 

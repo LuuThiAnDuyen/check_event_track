@@ -142,27 +142,4 @@ CSS = """<style>
   .status .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
   .note{margin-top:0.4rem;font-family:'JetBrains Mono',monospace;
     font-size:0.76rem;color:var(--ink-soft);max-width:38ch;}
-  /* Ghi chu triage: PHAI trong khac han phan tool tu do duoc. Doc chung mot
-     kieu chu thi nguoi doc tuong tool da xac minh, ma day la suy luan. */
-  .triage{margin-top:0.5rem;padding:0.5rem 0.65rem;max-width:42ch;
-    border-left:2px solid var(--accent);background:var(--accent-soft);
-    border-radius:0 6px 6px 0;}
-  .triage-head{display:flex;flex-wrap:wrap;align-items:center;gap:0.4rem;}
-  .triage-tag{font-family:'JetBrains Mono',monospace;font-size:0.7rem;
-    font-weight:600;color:var(--accent);}
-  .triage-vote{font-family:'JetBrains Mono',monospace;font-size:0.66rem;
-    color:var(--ink-soft);}
-  .triage p{margin:0.3rem 0 0;font-size:0.78rem;color:var(--ink);}
-  .triage .ev{font-family:'JetBrains Mono',monospace;font-size:0.72rem;
-    color:var(--ink-soft);}
-  .shots{margin-top:2rem;}
-  .shots-note{font-size:0.78rem;color:var(--ink-soft);max-width:60ch;}
-  .shots-case{margin-top:1.2rem;}
-  .shots-case h3{font-size:0.85rem;margin:0 0 0.5rem;}
-  .shots-row{display:flex;flex-wrap:wrap;gap:0.9rem;}
-  /* Anh may that cao 2280px - khong ghim chieu rong thi mot tam an het trang. */
-  .shot{margin:0;max-width:260px;}
-  .shot img{width:100%;height:auto;border-radius:8px;
-    border:1px solid var(--line,#ddd);display:block;}
-  .shot figcaption{font-size:0.72rem;color:var(--ink-soft);margin-top:0.3rem;}
 </style>"""
